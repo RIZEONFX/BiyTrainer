@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { hiraganaData } from '@/utils/hiraganaData'
 import { Hiragana } from '@/types'
-import { getLocalStorage } from '@/utils/localStorage'
 
 export default function LatihanHiragana() {
   const [selected, setSelected] = useState<Hiragana[]>(hiraganaData)
@@ -15,7 +14,6 @@ export default function LatihanHiragana() {
   const [checkboxes, setCheckboxes] = useState<boolean[]>(
     new Array(hiraganaData.length).fill(true)
   )
-  const [theme, setTheme] = useState('');
 
   const updateSelected = useCallback(() => {
     const newSelected = hiraganaData.filter((_, idx) => checkboxes[idx])
@@ -25,16 +23,6 @@ export default function LatihanHiragana() {
   useEffect(() => {
     updateSelected()
   }, [updateSelected])
-  
-  useEffect(() => {
-    const themeLoad = getLocalStorage<any>('theme');
-    setTheme(String(themeLoad))
-  }, [])
-  
-  useEffect(() => {
-    console.log(theme)
-    console.log(theme === "light")
-  }, [theme])
 
   const toggleCheckbox = (index: number) => {
     const newCheckboxes = [...checkboxes]
@@ -72,18 +60,21 @@ export default function LatihanHiragana() {
     setShowAnswer(false)
   }
 
-  const randomHiragana = useCallback((prev) => {
+  const randomHiragana = useCallback(() => {
     if (selected.length === 0) return
-    const randomIndex = Math.floor(Math.random() * selected.length)
-    if(prev !== selected[randomIndex]){
-     setCurrent(selected[randomIndex])
-     setAnswer('')
-     setResult('')
-     setShowAnswer(false)
-    } else {
-     randomHiragana();
-    }
-  }, [selected])
+    let randomIndex: number
+    let chosen: Hiragana
+  
+    do {
+      randomIndex = Math.floor(Math.random() * selected.length)
+      chosen = selected[randomIndex]
+    } while (chosen === current && selected.length > 1)
+  
+    setCurrent(chosen)
+    setAnswer('')
+    setResult('')
+    setShowAnswer(false)
+  }, [selected, current])
 
   const checkAnswer = () => {
     if (!current) return
