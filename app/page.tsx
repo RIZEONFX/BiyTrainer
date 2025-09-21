@@ -39,9 +39,9 @@ export default function Home() {
               <p className="text-gray-500 dark:text-gray-400 mb-6">Latihan huruf untuk kata serapan dan nama asing.</p>
               <Link 
                 href="/katakana" 
-                className="inline-block bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg no-underline transition-colors"
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg no-underline transition-colors"
               >
-                Segera Hadir
+                Mulai Latihan
               </Link>
             </div>
             
