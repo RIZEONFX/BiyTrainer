@@ -201,7 +201,7 @@ export default function LatihanKatakana() {
             </div>
             
             {result && (
-              <div className="result text-xl font-bold text-center p-2 bg-slate-500/50 dark:bg-gray-600/80 rounded-lg">
+              <div className="result text-xl font-bold text-center p-2 bg-slate-500/50 text-white dark:bg-gray-600/80 rounded-lg">
                 {result}
               </div>
             )}
