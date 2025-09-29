@@ -10,6 +10,8 @@ const dakutenKatakana = katakanaData.slice(46, 66); // Dakuten
 const handakutenKatakana = katakanaData.slice(66, 71); // Handakuten
 const yoonKatakana = katakanaData.slice(71); // Yōon (kombinasi)
 
+type Category = 'all' | 'basic' | 'dakuten' | 'handakuten' | 'yoon'
+
 export default function LatihanKatakana() {
   const [selected, setSelected] = useState<Hiragana[]>(katakanaData)
   const [current, setCurrent] = useState<Hiragana | null>(null)
@@ -21,7 +23,7 @@ export default function LatihanKatakana() {
     new Array(katakanaData.length).fill(true)
   )
   
-  const [activeCategory, setActiveCategory] = useState<'all' | 'basic' | 'dakuten' | 'handakuten' | 'yoon'>('all')
+  const [activeCategories, setActiveCategories] = useState<Category[]>(['all'])
 
   const updateSelected = useCallback(() => {
     const newSelected = katakanaData.filter((_, idx) => checkboxes[idx])
@@ -36,6 +38,9 @@ export default function LatihanKatakana() {
     const newCheckboxes = [...checkboxes]
     newCheckboxes[index] = !newCheckboxes[index]
     setCheckboxes(newCheckboxes)
+    
+    // Update active categories berdasarkan checkbox yang berubah
+    updateActiveCategoriesFromCheckboxes(newCheckboxes)
   }
 
   const toggleRow = (rowIndex: number, data: Hiragana[]) => {
@@ -49,41 +54,114 @@ export default function LatihanKatakana() {
     }
     
     setCheckboxes(newCheckboxes)
+    updateActiveCategoriesFromCheckboxes(newCheckboxes)
   }
 
-  const selectCategory = (category: 'all' | 'basic' | 'dakuten' | 'handakuten' | 'yoon') => {
+  // Fungsi untuk mengupdate active categories berdasarkan state checkboxes
+  const updateActiveCategoriesFromCheckboxes = (newCheckboxes: boolean[]) => {
+    const categories: Category[] = []
+    
+    // Cek setiap kategori
+    if (newCheckboxes.every(Boolean)) {
+      categories.push('all')
+    } else {
+      if (basicKatakana.every((_, i) => newCheckboxes[i])) {
+        categories.push('basic')
+      }
+      if (dakutenKatakana.every((_, i) => newCheckboxes[basicKatakana.length + i])) {
+        categories.push('dakuten')
+      }
+      if (handakutenKatakana.every((_, i) => newCheckboxes[basicKatakana.length + dakutenKatakana.length + i])) {
+        categories.push('handakuten')
+      }
+      if (yoonKatakana.every((_, i) => newCheckboxes[basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length + i])) {
+        categories.push('yoon')
+      }
+    }
+    
+    setActiveCategories(categories)
+  }
+
+  const selectCategory = (category: Category) => {
     const newCheckboxes = [...checkboxes]
     
     if (category === 'all') {
-      // Pilih semua
+      // Jika memilih "Semua Huruf", nonaktifkan kategori lain
       for (let i = 0; i < newCheckboxes.length; i++) {
         newCheckboxes[i] = true
       }
-    } else if (category === 'basic') {
-      // Hanya pilih katakana dasar
-      for (let i = 0; i < newCheckboxes.length; i++) {
-        newCheckboxes[i] = i < basicKatakana.length
-      }
-    } else if (category === 'dakuten') {
-      // Hanya pilih dakuten
-      for (let i = 0; i < newCheckboxes.length; i++) {
-        newCheckboxes[i] = i >= basicKatakana.length && i < basicKatakana.length + dakutenKatakana.length
-      }
-    } else if (category === 'handakuten') {
-      // Hanya pilih handakuten
-      for (let i = 0; i < newCheckboxes.length; i++) {
-        newCheckboxes[i] = i >= basicKatakana.length + dakutenKatakana.length && 
-                          i < basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length
-      }
-    } else if (category === 'yoon') {
-      // Hanya pilih yōon
-      for (let i = 0; i < newCheckboxes.length; i++) {
-        newCheckboxes[i] = i >= basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length
+      setActiveCategories(['all'])
+    } else {
+      // Untuk kategori selain "Semua Huruf"
+      const currentCategories = [...activeCategories]
+      
+      // Hapus 'all' jika ada
+      const filteredCategories = currentCategories.filter(cat => cat !== 'all')
+      
+      // Cek apakah kategori sudah aktif
+      const isCategoryActive = filteredCategories.includes(category)
+      
+      if (isCategoryActive) {
+        // Nonaktifkan kategori
+        const updatedCategories = filteredCategories.filter(cat => cat !== category)
+        setActiveCategories(updatedCategories)
+        
+        // Update checkboxes berdasarkan kategori yang tidak aktif
+        updateCheckboxesFromCategories(updatedCategories, newCheckboxes)
+      } else {
+        // Aktifkan kategori, dengan batas maksimal 3
+        if (filteredCategories.length >= 3) {
+          // Jika sudah 3 kategori aktif, aktifkan semua
+          for (let i = 0; i < newCheckboxes.length; i++) {
+            newCheckboxes[i] = true
+          }
+          setActiveCategories(['all'])
+        } else {
+          // Tambahkan kategori baru
+          const updatedCategories = [...filteredCategories, category]
+          setActiveCategories(updatedCategories)
+          
+          // Update checkboxes berdasarkan kategori yang aktif
+          updateCheckboxesFromCategories(updatedCategories, newCheckboxes)
+        }
       }
     }
     
     setCheckboxes(newCheckboxes)
-    setActiveCategory(category)
+  }
+
+  // Fungsi untuk mengupdate checkboxes berdasarkan kategori yang aktif
+  const updateCheckboxesFromCategories = (categories: Category[], newCheckboxes: boolean[]) => {
+    // Reset semua ke false terlebih dahulu
+    for (let i = 0; i < newCheckboxes.length; i++) {
+      newCheckboxes[i] = false
+    }
+    
+    // Aktifkan checkbox berdasarkan kategori
+    categories.forEach(cat => {
+      switch (cat) {
+        case 'basic':
+          for (let i = 0; i < basicKatakana.length; i++) {
+            newCheckboxes[i] = true
+          }
+          break
+        case 'dakuten':
+          for (let i = 0; i < dakutenKatakana.length; i++) {
+            newCheckboxes[basicKatakana.length + i] = true
+          }
+          break
+        case 'handakuten':
+          for (let i = 0; i < handakutenKatakana.length; i++) {
+            newCheckboxes[basicKatakana.length + dakutenKatakana.length + i] = true
+          }
+          break
+        case 'yoon':
+          for (let i = 0; i < yoonKatakana.length; i++) {
+            newCheckboxes[basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length + i] = true
+          }
+          break
+      }
+    })
   }
 
   const startTraining = () => {
@@ -184,6 +262,10 @@ export default function LatihanKatakana() {
     )
   }
 
+  const isCategoryActive = (category: Category) => {
+    return activeCategories.includes(category)
+  }
+
   return (
     <div className="container max-w-6xl mx-auto mt-2 mb-8 p-6 light bg-white dark:bg-gray-800 rounded-xl">
       <h1 className="text-3xl font-bold text-center mb-8">Latihan Katakana</h1>
@@ -197,7 +279,7 @@ export default function LatihanKatakana() {
               <button
                 onClick={() => selectCategory('all')}
                 className={`px-4 py-2 rounded-md transition-colors ${
-                  activeCategory === 'all' 
+                  isCategoryActive('all') 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -207,7 +289,7 @@ export default function LatihanKatakana() {
               <button
                 onClick={() => selectCategory('basic')}
                 className={`px-4 py-2 rounded-md transition-colors ${
-                  activeCategory === 'basic' 
+                  isCategoryActive('basic') 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -217,7 +299,7 @@ export default function LatihanKatakana() {
               <button
                 onClick={() => selectCategory('dakuten')}
                 className={`px-4 py-2 rounded-md transition-colors ${
-                  activeCategory === 'dakuten' 
+                  isCategoryActive('dakuten') 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -227,7 +309,7 @@ export default function LatihanKatakana() {
               <button
                 onClick={() => selectCategory('handakuten')}
                 className={`px-4 py-2 rounded-md transition-colors ${
-                  activeCategory === 'handakuten' 
+                  isCategoryActive('handakuten') 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -237,7 +319,7 @@ export default function LatihanKatakana() {
               <button
                 onClick={() => selectCategory('yoon')}
                 className={`px-4 py-2 rounded-md transition-colors ${
-                  activeCategory === 'yoon' 
+                  isCategoryActive('yoon') 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
@@ -245,6 +327,9 @@ export default function LatihanKatakana() {
                 Kombinasi (Yōon)
               </button>
             </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Pilih maksimal 3 kategori. Jika memilih 4 kategori, akan otomatis berubah menjadi "Semua Huruf".
+            </p>
           </div>
           
           {/* Grid Huruf */}
