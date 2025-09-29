@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { katakanaData } from '@/utils/katakanaData'
 import { Hiragana } from '@/types'
 
+// Pisahkan data menjadi kelompok-kelompok untuk organisasi yang lebih baik
+const basicKatakana = katakanaData.slice(0, 46); // Katakana dasar
+const dakutenKatakana = katakanaData.slice(46, 66); // Dakuten
+const handakutenKatakana = katakanaData.slice(66, 71); // Handakuten
+const yoonKatakana = katakanaData.slice(71); // Yōon (kombinasi)
+
 export default function LatihanKatakana() {
   const [selected, setSelected] = useState<Hiragana[]>(katakanaData)
   const [current, setCurrent] = useState<Hiragana | null>(null)
@@ -14,6 +20,8 @@ export default function LatihanKatakana() {
   const [checkboxes, setCheckboxes] = useState<boolean[]>(
     new Array(katakanaData.length).fill(true)
   )
+  
+  const [activeCategory, setActiveCategory] = useState<'all' | 'basic' | 'dakuten' | 'handakuten' | 'yoon'>('all')
 
   const updateSelected = useCallback(() => {
     const newSelected = katakanaData.filter((_, idx) => checkboxes[idx])
@@ -30,17 +38,52 @@ export default function LatihanKatakana() {
     setCheckboxes(newCheckboxes)
   }
 
-  const toggleRow = (rowIndex: number) => {
-    const newCheckboxes = [...checkboxes]
-    const startIndex = rowIndex * 5
-    const endIndex = Math.min(startIndex + 5, katakanaData.length)
-    const allChecked = newCheckboxes.slice(startIndex, endIndex).every(Boolean)
+  const toggleRow = (rowIndex: number, data: Hiragana[]) => {
+    const startIndex = katakanaData.findIndex(item => item.char === data[rowIndex * 5].char)
+    const endIndex = Math.min(startIndex + 5, startIndex + data.length)
+    const allChecked = checkboxes.slice(startIndex, endIndex).every(Boolean)
     
+    const newCheckboxes = [...checkboxes]
     for (let i = startIndex; i < endIndex; i++) {
       newCheckboxes[i] = !allChecked
     }
     
     setCheckboxes(newCheckboxes)
+  }
+
+  const selectCategory = (category: 'all' | 'basic' | 'dakuten' | 'handakuten' | 'yoon') => {
+    const newCheckboxes = [...checkboxes]
+    
+    if (category === 'all') {
+      // Pilih semua
+      for (let i = 0; i < newCheckboxes.length; i++) {
+        newCheckboxes[i] = true
+      }
+    } else if (category === 'basic') {
+      // Hanya pilih katakana dasar
+      for (let i = 0; i < newCheckboxes.length; i++) {
+        newCheckboxes[i] = i < basicKatakana.length
+      }
+    } else if (category === 'dakuten') {
+      // Hanya pilih dakuten
+      for (let i = 0; i < newCheckboxes.length; i++) {
+        newCheckboxes[i] = i >= basicKatakana.length && i < basicKatakana.length + dakutenKatakana.length
+      }
+    } else if (category === 'handakuten') {
+      // Hanya pilih handakuten
+      for (let i = 0; i < newCheckboxes.length; i++) {
+        newCheckboxes[i] = i >= basicKatakana.length + dakutenKatakana.length && 
+                          i < basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length
+      }
+    } else if (category === 'yoon') {
+      // Hanya pilih yōon
+      for (let i = 0; i < newCheckboxes.length; i++) {
+        newCheckboxes[i] = i >= basicKatakana.length + dakutenKatakana.length + handakutenKatakana.length
+      }
+    }
+    
+    setCheckboxes(newCheckboxes)
+    setActiveCategory(category)
   }
 
   const startTraining = () => {
@@ -94,46 +137,124 @@ export default function LatihanKatakana() {
     }
   }
 
+  const renderKatakanaGrid = (data: Hiragana[], title: string) => {
+    if (data.length === 0) return null;
+    
+    const startIndex = katakanaData.findIndex(item => item.char === data[0].char)
+    
+    return (
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-slate-400">{title}</h3>
+        <div className="grid gap-3">
+          {Array.from({ length: Math.ceil(data.length / 5) }).map((_, rowIndex) => {
+            const rowItems = data.slice(rowIndex * 5, (rowIndex * 5) + 5)
+            
+            return (
+              <div key={`row-${title}-${rowIndex}`} className="row flex items-center gap-3 p-2 rounded-md">
+                <input
+                  type="checkbox"
+                  checked={rowItems.every((_, i) => {
+                    const idx = startIndex + (rowIndex * 5) + i
+                    return checkboxes[idx]
+                  })}
+                  onChange={() => toggleRow(rowIndex, data)}
+                  className="w-4 h-4 text-blue-600 rounded"
+                />
+                
+                {rowItems.map((katakana, cellIndex) => {
+                  const idx = startIndex + (rowIndex * 5) + cellIndex
+                  return (
+                    <label key={katakana.char} className="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors flex-1 justify-center">
+                      <input
+                        type="checkbox"
+                        checked={checkboxes[idx]}
+                        onChange={() => toggleCheckbox(idx)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="text-lg font-medium">{katakana.char}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">({katakana.romaji})</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container max-w-4xl mx-auto mt-2 mb-8 p-6 light bg-white dark:bg-gray-800 rounded-xl">
+    <div className="container max-w-6xl mx-auto mt-2 mb-8 p-6 light bg-white dark:bg-gray-800 rounded-xl">
       <h1 className="text-3xl font-bold text-center mb-8">Latihan Katakana</h1>
       
       {!isTraining ? (
         <>
-          <div className="options grid gap-4 mb-8 max-h-96 overflow-y-auto p-4 light bg-slate-200/10 shadow shadow-md rounded-lg">
+          {/* Kategori Pilihan Cepat */}
+          <div className="mb-6 p-4 light bg-slate-200/10 shadow shadow-md rounded-lg">
+            <h2 className="text-md font-semibold mb-3">Pilih Kategori:</h2>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => selectCategory('all')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeCategory === 'all' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Semua Huruf
+              </button>
+              <button
+                onClick={() => selectCategory('basic')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeCategory === 'basic' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Katakana Dasar
+              </button>
+              <button
+                onClick={() => selectCategory('dakuten')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeCategory === 'dakuten' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Dakuten (゛)
+              </button>
+              <button
+                onClick={() => selectCategory('handakuten')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeCategory === 'handakuten' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Handakuten (゜)
+              </button>
+              <button
+                onClick={() => selectCategory('yoon')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  activeCategory === 'yoon' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Kombinasi (Yōon)
+              </button>
+            </div>
+          </div>
+          
+          {/* Grid Huruf */}
+          <div className="options mb-8 max-h-[500px] overflow-y-auto p-4 light bg-slate-200/10 shadow shadow-md rounded-lg">
             <h2 className="text-md font-semibold mb-4">Pilih Huruf yang Ingin Dipelajari:</h2>
-            {Array.from({ length: Math.ceil(katakanaData.length / 5) }).map((_, rowIndex) => {
-              const startIdx = rowIndex * 5
-              const endIdx = Math.min(startIdx + 5, katakanaData.length)
-              const rowItems = katakanaData.slice(startIdx, endIdx)
-              
-              return (
-                <div key={`row-${rowIndex}`} className="row flex items-center gap-4 p-2 rounded-md">
-                  <input
-                    type="checkbox"
-                    checked={rowItems.every((_, i) => checkboxes[startIdx + i])}
-                    onChange={() => toggleRow(rowIndex)}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  
-                  {rowItems.map((katakana, cellIndex) => {
-                    const idx = startIdx + cellIndex
-                    return (
-                      <label key={katakana.char} className="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={checkboxes[idx]}
-                          onChange={() => toggleCheckbox(idx)}
-                          className="w-4 h-4 text-blue-600 rounded"
-                        />
-                        <span className="text-lg font-medium">{katakana.char}</span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">({katakana.romaji})</span>
-                      </label>
-                    )
-                  })}
-                </div>
-              )
-            })}
+            
+            {renderKatakanaGrid(basicKatakana, "Katakana Dasar")}
+            {renderKatakanaGrid(dakutenKatakana, "Dakuten (Tanda Vokal Berubah ゛)")}
+            {renderKatakanaGrid(handakutenKatakana, "Handakuten (Tanda Lingkaran ゜)")}
+            {renderKatakanaGrid(yoonKatakana, "Kombinasi (Yōon)")}
           </div>
           
           <div className="text-center">
@@ -201,7 +322,7 @@ export default function LatihanKatakana() {
             </div>
             
             {result && (
-              <div className="result text-xl font-bold text-center p-2 bg-slate-500/50 text-white dark:bg-gray-600/80 rounded-lg">
+              <div className="result text-xl font-bold text-center p-2 bg-slate-500/50 dark:bg-gray-600/80 rounded-lg">
                 {result}
               </div>
             )}
