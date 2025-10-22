@@ -45,6 +45,20 @@ export default function Home() {
               </Link>
             </div>
             
+            <div className="bg-gray-200/10 p-8 rounded-2xl text-center transition-all duration-300 shadow-[0_0_3px_rgba(0,0,0,0.2)] dark:border dark:border-gray-700">
+              <div className="text-4xl mb-4">漢</div>
+              <h3 className="text-2xl font-semibold mb-4">Kanji N5</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
+                Latihan kanji level N5 yang dikelompokkan berdasarkan tema seperti angka, waktu, alam, dan lainnya.
+              </p>
+              <Link 
+                href="/kanji-n5" 
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg no-underline transition-colors"
+              >
+                Mulai Latihan
+              </Link>
+            </div>
+            
             <div className="bg-gray-200/10 p-8 rounded-2xl text-center transition-all duration-300 shadow-[0_0_3px_rgba(0,0,0,0.2)] shadow dark:border dark:border-gray-700">
               <div className="text-4xl mb-4">📖</div>
               <h3 className="text-2xl font-semibold mb-4">Kosakata</h3>

@@ -3,6 +3,14 @@ export interface Hiragana {
   romaji: string
 }
 
+export interface Kanji {
+  character: string
+  meaning: string
+  readings: string[]
+  romaji: string[]
+  category: string
+}
+
 export type Katakana = Hiragana;
 
 export type Theme = 'light' | 'dark'
