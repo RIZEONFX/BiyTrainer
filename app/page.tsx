@@ -61,13 +61,13 @@ export default function Home() {
             
             <div className="bg-gray-200/10 p-8 rounded-2xl text-center transition-all duration-300 shadow-[0_0_3px_rgba(0,0,0,0.2)] shadow dark:border dark:border-gray-700">
               <div className="text-4xl mb-4">📖</div>
-              <h3 className="text-2xl font-semibold mb-4">Kosakata</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">Perbanyak perbendaharaan kata untuk melancarkan percakapan.</p>
+              <h3 className="text-2xl font-semibold mb-4">Kosakata N5</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">Latihan kosakata JLPT N5 dengan kanji, dikelompokkan berdasarkan jenis kata (kata benda, kerja, sifat, dll.)</p>
               <Link 
-                href="/kosakata" 
-                className="inline-block bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg no-underline transition-colors"
+                href="/kosakata-n5" 
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg no-underline transition-colors"
               >
-                Segera Hadir
+                Mulai Latihan
               </Link>
             </div>
           </div>

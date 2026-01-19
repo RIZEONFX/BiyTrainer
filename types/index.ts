@@ -11,6 +11,15 @@ export interface Kanji {
   category: string
 }
 
+export interface Kosakata {
+  kata: string
+  arti: string
+  romaji: string
+  kategori: 'kata-benda' | 'kata-kerja' | 'kata-sifat' | 'kata-keterangan' | 'partikel' | 'ungkapan'
+  contoh?: string
+  contohArti?: string
+}
+
 export type Katakana = Hiragana;
 
 export type Theme = 'light' | 'dark'

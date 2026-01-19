@@ -46,8 +46,8 @@ export default function Header() {
         <Link href="/kanji-n5" className="p-3 text-current no-underline transition-colors hover:bg-black/5 dark:hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
           漢字 Kanji N5
         </Link>
-        <Link href="/kosakata" className="p-3 text-current no-underline transition-colors hover:bg-black/5 dark:hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
-          📖 Kosakata
+        <Link href="/kosakata-n5" className="p-3 text-current no-underline transition-colors hover:bg-black/5 dark:hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
+          📖 Kosakata N5
         </Link>
       </nav>
     </header>
